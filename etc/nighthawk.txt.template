@@ -12,12 +12,12 @@ INTRODUCTION                                                       *nighthawk*
 NightHawk is a NeoVim plugin that lets the editor track how much time is spend
 editing individual files.
 
-The  plugin exposes  Lua functions  that accumulate  that information  for all
-files in  a directory tree and  provide the basis  to track the time  that was
+The plugin exposes Lua functions that accumulate that information for all
+files in a directory tree and provide the basis to track the time that was
 spend on working in different workspaces or for different projects.
 
 Those and other service functions can be used in other plugins (e.g. Neo-Tree)
-to visualize the  information or to use  it to create project  reports or fill
+to visualize the information or to use it to create project reports or fill
 out time cards.
 
 ==============================================================================

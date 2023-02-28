@@ -13,6 +13,12 @@ local function exists(name)
     return os.rename(name, name) and true or false
 end
 
+--- clears local statistics
+function statistics.clear()
+    buffer_table = {}
+    last_file = nil
+end
+
 --- Add time for a buffer that was touched
 --- If the buffer_name is not an existing file or dir then
 --- add the time to the last real file that was previously
@@ -20,7 +26,7 @@ end
 ---
 --- @param buffer_name string Name of a vim buffer.
 --- @param time number seconds that should be added.
-function statistics.buffer_add_time(buffer_name, time)
+function statistics.add(buffer_name, time)
 
     -- Check if buffer_name is a existing file or dir.
     if exists(buffer_name) then
@@ -37,14 +43,40 @@ function statistics.buffer_add_time(buffer_name, time)
     end
 end
 
+local function sec2time(seconds)
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds - h * 3600) / 60)
+    local s = seconds % 60
+
+    local res = ""
+    if h > 0 then
+        res = res .. h .. ':'
+    end
+    if m > 0 then
+        if h > 0 then
+            res = res .. string.format("%02d", m) .. ':'
+        else
+            res = res .. m .. ':'
+        end
+        res = res .. string.format("%02d", s)
+    else
+        res = res .. s
+    end
+    return res
+end
+
 --- Returns the accrued handling time as hour/minute/second string
 ---
 --- @param path any
 --- @return boolean true when entry for path exists
 --- @return string time in the format of [[HH:]MM:]SS
-function statistics.get_time(path)
+function statistics.get(path)
     local acc = 0 -- seconds 
     local res = "" -- output string
+
+    if path == nil then
+        return false, "0"
+    end
 
     -- accumulate all numbers that belong to the path
     if buffer_table[path] ~= nil then
@@ -58,25 +90,7 @@ function statistics.get_time(path)
     end
 
     -- calculate hours/minutes/seconds
-    local hours = math.floor(acc / 3600)
-    local minutes = math.floor((acc - hours * 60) / 60)
-    local seconds = acc % 60
-
-    -- build the output string
-    -- (leading 0's for all except the first number)
-    if hours > 0 then
-        res = res .. hours .. ':'
-    end
-    if minutes > 0 then
-        if hours > 0 then
-            res = res .. string.format("%02d", minutes) .. ':'
-        else
-            res = res .. minutes .. ':'
-        end
-        res = res .. string.format("%02d", seconds)
-    else
-        res = res .. seconds
-    end
+    res = sec2time(acc)
 
     -- return success plus the result string
     return true, res
