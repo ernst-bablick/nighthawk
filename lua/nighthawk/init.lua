@@ -11,6 +11,7 @@ local function setup_commands()
     if commands_initialized == false then
         vim.api.nvim_create_user_command('NighthawkCleanup', nighthawk.cleanup, {bang=true})
         vim.api.nvim_create_user_command('NighthawkSetup', nighthawk.setup, {bang=true})
+        commands_initialized = false
     end
 end
 
