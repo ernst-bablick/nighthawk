@@ -1,37 +1,36 @@
 -- import additional Lua modules
+local Nighthawk = require("nighthawk.Nighthawk")
 local health = require("nighthawk.health")
-local statistics = require("nighthawk.statistics")
-local watchdog = require("nighthawk.watchdog")
+local dlog = require("nighthawk.dlog")
 
--- declare the module
-local nighthawk = {}
+local module = {}
+local nighthawk = nil
 local commands_initialized = false
 
 local function setup_commands()
     if commands_initialized == false then
-        vim.api.nvim_create_user_command('NighthawkCleanup', nighthawk.cleanup, {bang=true})
-        vim.api.nvim_create_user_command('NighthawkSetup', nighthawk.setup, {bang=true})
+        vim.api.nvim_create_user_command('NighthawkCleanup', module.cleanup, {bang=true})
+        vim.api.nvim_create_user_command('NighthawkSetup', module.setup, {bang=true})
         commands_initialized = false
     end
 end
 
-function nighthawk.setup()
-    watchdog.setup()
+function module.setup()
+    nighthawk = Nighthawk:new()
     setup_commands()
 end
 
-function nighthawk.cleanup()
-    watchdog.cleanup()
+function module.cleanup()
+    nighthawk = nil
 end
 
-function nighthawk.get(path)
-    return statistics.get(path)
+function module.get(path)
+    return nighthawk:get(path)
 end
 
-function nighthawk.check()
+function module.check()
     health.check()
-    watchdog.cleanup()
 end
 
 -- return the module
-return nighthawk
+return module

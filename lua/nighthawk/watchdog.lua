@@ -1,41 +1,90 @@
-local statistics = require("nighthawk.statistics")
+local dlog = require("nighthawk.dlog")
 
--- this module
-local watchdog = {}
-
--- local variable
-local autogrp    = nil -- autogroup used to register all autocommands
-local timer      = nil -- timer handle
-local buffer     = nil -- name of last buffer touched
-local timestamp  = 0   -- timstamp when buffer was touched last
-local inactivity = 0   -- time in which no buffer was switched or changed
-local dlog       = nil -- debug log function
-
+-- some default values for this module
+-- @todo move the values into the configuration
 local AUTOCMD_GRP    = "Nighthawk" -- name of the autocommand group
-local DEBUG_LOGGER   = "Nighthawk" -- name of the debug logger
-local MAX_INACTIVITY = 15          -- max inactivity in seconds
+local MAX_INACTIVITY = 120         -- max inactivity in seconds
 local TIMER_INTERVAL = 1000        -- timer interval in milliseconds
 
 --- Check if a file or directory with the given name exists
 ---
---- @param name string file or path name
 --- @return boolean true when name is a file or directory
-local function exists(name)
-    if type(name) ~= "string" then
-        return false
-    end
-    return os.rename(name, name) and true or false
+local function is_file_or_dir(str)
+    return os.rename(str, str) and true or false
 end
 
---- Reset timer parameters
-local function reset_timer()
-    -- terminate the timer
-    timer:close()
+local Watchdog = {
+    -- autogroup used to register all autocommands
+    autogrp = nil,
 
-    -- reset variables to defaults
-    timer = nil
-    timestamp = 0
-    inactivity = 0
+    -- timer handle
+    timer = nil,
+
+    -- name of last buffer touched
+    buffer = nil,
+
+    -- timstamp when buffer was touched last
+    timestamp = 0,
+
+    -- time in which no buffer was switched or changed
+    inactivity = 0,
+
+    -- callback function of the DB module
+    add_time_func = nil
+}
+
+--- Triggered for each new or touched buffer
+---
+--- @param ev any Event with more details
+function Watchdog:buffer_attached_callback(ev)
+    self:update(ev.buf, false)
+    vim.api.nvim_buf_attach(0, false, {
+        on_bytes = function (arg1, arg2)
+            self:buffer_changed_callback(arg1, arg2)
+        end
+    })
+end
+
+--- Callback triggered when a buffer is changed.
+---
+--- @param _ any   String
+--- @param buf any Buffer ID
+function Watchdog:buffer_changed_callback(_, buf)
+    self:update(buf, true)
+end
+
+--- Unregister from buffer and windows events
+function Watchdog:cleanup()
+    -- stop the timer
+    if self.timer ~= nil then
+        self:reset_timer()
+    end
+
+    -- destroy autogrp and autocmds
+    if self.autogrp ~= nil then
+        vim.api.nvim_del_augroup_by_id(self.autogrp)
+        self.autogrp = nil
+    end
+end
+
+--- Constructor of Watchdog instances
+---
+--- @return any New instance of Watchdog
+function Watchdog:new(o)
+    -- object setup
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    self.__newindex = self
+
+    -- destructor
+    self.__gc = function()
+        self:cleanup()
+    end
+
+    -- call 
+    self:setup()
+    return o
 end
 
 --- Reports time to the statistics module.
@@ -45,81 +94,47 @@ end
 --- file that was changed last.
 --- Also disabels the timer after a certain amount of inactivity
 --- The timer otherwise continues to call this function.
-local function propagate()
+function Watchdog:propagate()
     local now = os.time()
 
     -- seconds since last call
     local delta = 0
-    if timestamp > 0 then
-        delta = now - timestamp
+    if self.timestamp > 0 then
+        delta = now - self.timestamp
     end
 
     -- propagate time to statistics module
-    if buffer ~= nil and delta > 0 then
-        statistics.add(buffer, delta)
-        dlog("propagating %d sec for %s", delta, buffer)
+    if self.buffer ~= nil and delta > 0 then
+        if self.add_time_func then
+            self.add_time_func(self.buffer, delta)
+            dlog("propagating %d sec for %s", delta, self.buffer)
+        end
     end
 
     -- update timestamps
-    inactivity = inactivity + delta
-    timestamp = now
+    self.inactivity = self.inactivity + delta
+    self.timestamp = now
 
     -- disable timer if there was no update for x seconds
-    if inactivity > MAX_INACTIVITY + 1 then
+    if self.inactivity > MAX_INACTIVITY + 1 then
         dlog("timer reset due to inactivity")
-        reset_timer()
+        self:reset_timer()
     end
 end
 
---- Updates currently edited buffer.
----
---- @param buf number Buffer ID for a buffer that was attached or modified
---- @param has_changed boolean true if buffer contend was changed
-local function update(buf, has_changed)
-    local bufname = vim.api.nvim_buf_get_name(buf)
-    local start_timer = false
-    local is_real_file = exists(bufname)
-
-    -- was contend changed
-    if has_changed == true and is_real_file then
-        start_timer = true
-        dlog("buffer for a real file has changed (need timer)")
-    end
-
-    -- was the buffer switched
-    if bufname ~= nil and buffer ~= bufname and is_real_file then
-        dlog("buffer was switched from %s to %s (need timer)", buffer, bufname)
-        buffer = bufname
-        start_timer = true
-    end
-
-    -- create a timer to propagate data if it does not exist already
-    if start_timer == true then
-        if timer == nil then
-            timer = vim.loop.new_timer()
-            timer:start(TIMER_INTERVAL, TIMER_INTERVAL, vim.schedule_wrap(propagate))
-            dlog("starting timer")
-        end
-        inactivity = 0
-    end
+function Watchdog:register_add_time(add_time_func)
+    self.add_time_func = add_time_func
 end
 
---- Callback triggered when a buffer is changed.
----
---- @param _ any   String
---- @param buf any Buffer ID
-local function buffer_changed_callback(_, buf)
-    update(buf, true)
-end
+--- Reset timer parameters
+function Watchdog:reset_timer()
+    -- terminate the timer
+    self.timer:close()
+    self.timer = nil
 
---- Triggered for each new or touched buffer
----
---- @param ev any Event with more details
-local function buffer_attached_callback(ev)
-    update(ev.buf, false)
-    vim.api.nvim_buf_attach(0, false, {
-        on_bytes = buffer_changed_callback
-    })
+    -- reset variables to defaults
+    self.timestamp = 0
+    self.inactivity = 0
 end
 
 --- Registers for certain buffer and windows events
@@ -127,26 +142,10 @@ end
 --- This function creates an autogroup and adds an autocommand that will
 --- trigger the registered callback on certain vim buffer and windows
 --- events that indicate that the user is processing a new file.
-function watchdog.setup()
-    dlog = require("nighthawk.dlog")(DEBUG_LOGGER)
-    if dlog == nil then
-        return
-    else
-        local debuglog = require("debuglog")
-
-        debuglog.set_config({
-            log_to_file = true,
-            log_to_console = false,
-        })
-        debuglog.enable(DEBUG_LOGGER)
-    end
-
-    -- print(require("debuglog").log_file_path())
-
-
+function Watchdog:setup()
     -- create an autogroup if it does not already exist
-    if autogrp == nil then
-        autogrp = vim.api.nvim_create_augroup(AUTOCMD_GRP, { clear = true })
+    if self.autogrp == nil then
+        self.autogrp = vim.api.nvim_create_augroup(AUTOCMD_GRP, { clear = true })
     end
 
     -- add an autocommand to the group
@@ -160,28 +159,48 @@ function watchdog.setup()
             "BufWinEnter" -- display of a hidden buffer
         },
         {
-            group = autogrp,
+            group = self.autogrp,
             pattern = { "*" },
-            callback = buffer_attached_callback
+            callback = function (ev)
+                self:buffer_attached_callback(ev)
+            end
         }
     )
 end
 
---- Unregister from buffer and windows events
-function watchdog.cleanup()
-    -- stop the timer
-    if timer ~= nil then
-        reset_timer();
+--- Updates currently edited buffer.
+---
+--- @param buf number Buffer ID for a buffer that was attached or modified
+--- @param has_changed boolean true if buffer contend was changed
+function Watchdog:update(buf, has_changed)
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    local start_timer = false
+    local is_real_file = is_file_or_dir(bufname)
+
+    -- was contend changed
+    if has_changed == true and is_real_file then
+        start_timer = true
+        dlog("buffer for a real file has changed")
     end
 
-    -- destroy autogrp and autocmds
-    if autogrp ~= nil then
-        vim.api.nvim_del_augroup_by_id(autogrp)
-        autogrp = nil
+    -- was the buffer switched
+    if bufname ~= nil and self.buffer ~= bufname and is_real_file then
+        dlog("buffer was switched from %s to %s", self.buffer, bufname)
+        self.buffer = bufname
+        start_timer = true
     end
 
-    -- reset statistics
-    statistics.clear()
+    -- create a timer to propagate data if it does not exist already
+    if start_timer == true then
+        if self.timer == nil then
+            self.timer = vim.loop.new_timer()
+            self.timer:start(TIMER_INTERVAL, TIMER_INTERVAL, vim.schedule_wrap(function ()
+                self:propagate()
+            end))
+            dlog("starting timer due to user activities")
+        end
+        self.inactivity = 0
+    end
 end
 
-return watchdog
+return Watchdog
