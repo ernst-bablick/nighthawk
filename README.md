@@ -2,15 +2,18 @@
 
 ## Summary
 
+WORK IN PROGRESS. FIRST VERSION IS STILL NOT FINALIZED.
+
 NightHawk is a NeoVim plugin that lets the editor track how much time is spend
 editing individual files.
 
-The  plugin exposes  Lua functions  that accumulate  that information  for all
+The  plugin exposes  Lua functions  that accumulate  that time  for all
 files in  a directory tree and  provide the basis  to track the time  that was
 spend on working in different workspaces or for different projects.
 
-Those and other service functions can be used in other plugins (e.g. Neo-Tree)
-to visualize the  information or to use  it to create project  reports or fill
+Service functions can be used in other plugins (e.g. Neo-Tree)
+to visualize the  information per node in a directory tree or the 
+information can directly be used by people to create project  reports or fill
 out time cards.
 
 ## How does it work?
@@ -23,9 +26,7 @@ Time  spend on  buffers that  have no  file attached  (e.g. Neo-Tree,  Tagbar,
 Terminal, ...) will also be tracked  and automatically be added to the numbers
 of the last file worked on.
 
-The editing  time is  collected with  second granularity and  stored in  a map
-where  absolute  filenames are  used  as  key. This  map  is  used by  several
-functions to expose the stored information.
+The editing time is collected with second granularity and stored in a sqlite database.
 
 ## How can this plugin be installed?
 
@@ -35,7 +36,13 @@ The plugin is available through Github.
 git clone https://github.com/ernst-bablick/nighthawk
 ```
 
-Either install  it manually, use your  favorite package manager, or  use Vim's
+It depends on a SQLite/LuaJIT plugin that is also available as plugin for NeoVim
+
+```
+git clone https://github.com/kkharji/sqlite.lua
+```
+
+Either install the plugins manually, use your  favorite package manager, or  use Vim's
 built-in package support.
 
 ## Where can more information be found?
