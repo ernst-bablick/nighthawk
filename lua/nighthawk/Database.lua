@@ -26,14 +26,9 @@ end
 local Database = {
     -- DB connection
     connection = nil,
-
-    -- map of paths that holds the time in seconds
-    buffer_table = {},
-
-    -- last real filepath that was touched
-    last_file = nil,
 }
 
+--- Constructor for a new Database instance
 function Database:new(o)
     -- object setup
     o = o or {}
@@ -45,12 +40,25 @@ function Database:new(o)
         self:cleanup()
     end
 
-    -- instance variables
-    self.buffer_table = {}
-
     return o
 end
 
+--- Create the DB tables if they do not exist
+function Database:create_table()
+    if not self.connection:exists('buffers') then
+        self.connection:create(
+            'buffers', {
+                path = {'text', 'primary', 'key'},
+                seconds = {type = 'integer', default = 0},
+            }
+        )
+        if not self.connection:exists('buffers') then
+            dlog("unable to create table buffers")
+        end
+    end
+end
+
+--- Connect to the DB
 function Database:connect(dbfile)
     -- establish DB connection
     if not self.connection then
@@ -60,59 +68,80 @@ function Database:connect(dbfile)
             return
         end
     end
+
+    -- create table
+    self:create_table()
 end
 
+--- Release a Database instance.
 function Database:cleanup()
     -- close DB connection
     if self.connection then
         self.connection:close()
         self.connection = nil
     end
-
-    -- reset instance variables
-    self.buffer_table = nil
-    self.last_file = nil
 end
 
 --- Add time for a buffer that was touched
---- If the buffer_name is not an existing file or dir then
---- add the time to the last real file that was previously
---- handled.
 ---
 --- @param buffer_name string Name of a vim buffer.
 --- @param time number seconds that should be added.
 function Database:add(buffer_name, time)
-    self.last_file = buffer_name
+    -- find record for path if there is one
+    local records = self.connection:select("buffers", {where = {path = buffer_name}})
 
-    -- Add the time to the last existing file or dir that was touched.
-    if self.last_file and self.buffer_table then
-        if self.buffer_table[self.last_file] == nil then
-            self.buffer_table[self.last_file] = 0
-        end
-        self.buffer_table[self.last_file] = self.buffer_table[self.last_file] + time
+    -- add the seconds to the already accrued amount
+    local sec
+    if #records == 1 then
+        sec = records[1]["seconds"] + time
+    else
+        sec = time
+    end
+
+    -- insert or update the record
+    local ok = false
+    if #records > 0 then
+       ok = self.connection:update("buffers", {
+           where = {path = buffer_name},
+           set = {path = buffer_name, seconds = sec}
+       })
+    else
+       ok = self.connection:insert("buffers", {
+           path = buffer_name,
+           seconds = sec
+       })
+    end
+
+    -- log the error if there was one
+    if not ok then
+       dlog("insert/update of %s in DB failed", buffer_name)
     end
 end
 
 --- Returns the accrued handling time as hour/minute/second string
 ---
---- @param path any
+--- @param path string Absolute file or directory path
 --- @return string time in the format of [[HH:]MM:]SS
 function Database:get(path)
     -- early exit
-    if path == nil or self.buffer_table == nil then
+    if path == nil then
         return "0"
     end
 
-    -- file entries are aprt of the map
-    if self.buffer_table[path] ~= nil then
-        return sec2time(self.buffer_table[path])
+    -- if path is a file we will get exactly one row from the DB
+    local record = self.connection:select("buffers", {where = {path = path}})
+    if #record == 1 then
+        return sec2time(record[1]["seconds"])
     end
 
-    -- accumulate all numbers that belong to a directory
+    -- must be a directory. we need add up all records that start with path
     local sec = 0
-    for key, value in pairs(self.buffer_table) do
-        if string.sub(key, 1, #path) == path then
-            sec = sec + value
+    local records = self.connection:select("buffers")
+    if #records > 0 then
+        for _, row in pairs(records) do
+            if string.sub(row["path"], 1, #path) == path then
+                sec = sec + row["seconds"]
+            end
         end
     end
     return sec2time(sec)
