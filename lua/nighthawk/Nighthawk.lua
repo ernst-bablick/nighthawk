@@ -46,6 +46,9 @@ function Nighthawk:setup()
     self.watchdog:register_add_time(function (bufname, time)
         self.database:add(bufname, time)
     end)
+
+    -- establish DB connection
+    self.database:connect("/Users/ebablick/Nighthawk.sqlite")
 end
 
 --- Called when object is garbage collected
