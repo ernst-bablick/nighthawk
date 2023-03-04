@@ -23,6 +23,8 @@ local function sec2time(seconds)
     return res
 end
 
+local DB_FILE = "~/Nighthawk.sqlite"
+
 local Database = {
     -- DB connection
     connection = nil,
@@ -59,10 +61,13 @@ function Database:create_table()
 end
 
 --- Connect to the DB
-function Database:connect(dbfile)
+function Database:setup(config)
+    local db_file = config["df_file"] or DB_FILE
+    db_file = vim.fn.expand(db_file)
+
     -- establish DB connection
     if not self.connection then
-        self.connection = sqlite.new(dbfile, {keep_open = true})
+        self.connection = sqlite.new(db_file, {keep_open = true})
         if not self.connection then
             dlog("unable to establish DB connection")
             return
@@ -86,6 +91,7 @@ end
 ---
 --- @param buffer_name string Name of a vim buffer.
 --- @param time number seconds that should be added.
+--- @todo decople function call from database access to improve performance in edit mode
 function Database:add(buffer_name, time)
     -- find record for path if there is one
     local records = self.connection:select("buffers", {where = {path = buffer_name}})
