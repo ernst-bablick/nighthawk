@@ -1,10 +1,7 @@
 local dlog = require("nighthawk.dlog")
 
 -- some default values for this module
--- @todo move the values into the configuration
 local AUTOCMD_GRP    = "Nighthawk" -- name of the autocommand group
-local MAX_INACTIVITY = 120         -- max inactivity in seconds
-local TIMER_INTERVAL = 1000        -- timer interval in milliseconds
 
 --- Check if a file or directory with the given name exists
 ---
@@ -39,7 +36,7 @@ local Watchdog = {
 function Watchdog:buffer_attached_callback(ev)
     self:update(ev.buf, false)
     vim.api.nvim_buf_attach(0, false, {
-        on_bytes = function (arg1, arg2)
+        on_lines = function (arg1, arg2)
             self:buffer_changed_callback(arg1, arg2)
         end
     })
@@ -50,7 +47,10 @@ end
 --- @param _ any   String
 --- @param buf any Buffer ID
 function Watchdog:buffer_changed_callback(_, buf)
-    self:update(buf, true)
+    -- skip to frequent updates otherwise this will slow down editing of buffers
+    if self.timestamp ~= os.time() then
+        self:update(buf, true)
+    end
 end
 
 --- Unregister from buffer and windows events
@@ -81,9 +81,6 @@ function Watchdog:new(o)
     self.__gc = function()
         self:cleanup()
     end
-
-    -- call 
-    self:setup()
     return o
 end
 
@@ -116,7 +113,7 @@ function Watchdog:propagate()
     self.timestamp = now
 
     -- disable timer if there was no update for x seconds
-    if self.inactivity > MAX_INACTIVITY + 1 then
+    if self.inactivity >= self.max_inactivity then
         dlog("timer reset due to inactivity")
         self:reset_timer()
     end
@@ -142,7 +139,11 @@ end
 --- This function creates an autogroup and adds an autocommand that will
 --- trigger the registered callback on certain vim buffer and windows
 --- events that indicate that the user is processing a new file.
-function Watchdog:setup()
+function Watchdog:setup(config)
+    -- store config values for this class
+    self.max_inactivity = config["max_inactivity"] or 120    -- seconds
+    self.report_interval = config["report_interval"] or 1000 -- milliseconds
+
     -- create an autogroup if it does not already exist
     if self.autogrp == nil then
         self.autogrp = vim.api.nvim_create_augroup(AUTOCMD_GRP, { clear = true })
@@ -173,6 +174,11 @@ end
 --- @param buf number Buffer ID for a buffer that was attached or modified
 --- @param has_changed boolean true if buffer contend was changed
 function Watchdog:update(buf, has_changed)
+    -- skip to frequent updates otherwise this will slow down editing of buffers
+    if self.timestamp == os.time() then
+        return
+    end
+
     local bufname = vim.api.nvim_buf_get_name(buf)
     local start_timer = false
     local is_real_file = is_file_or_dir(bufname)
@@ -194,7 +200,7 @@ function Watchdog:update(buf, has_changed)
     if start_timer == true then
         if self.timer == nil then
             self.timer = vim.loop.new_timer()
-            self.timer:start(TIMER_INTERVAL, TIMER_INTERVAL, vim.schedule_wrap(function ()
+            self.timer:start(self.report_interval, self.report_interval, vim.schedule_wrap(function ()
                 self:propagate()
             end))
             dlog("starting timer due to user activities")

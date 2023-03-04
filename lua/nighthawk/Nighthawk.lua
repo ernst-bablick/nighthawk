@@ -19,20 +19,19 @@ function Nighthawk:new(o)
     self.__gc = function ()
         self:cleanup()
     end
-
-    -- Setup object
-    self:setup()
     return o
 end
 
 --- Initializes members for instances of Nighthawk
-function Nighthawk:setup()
+function Nighthawk:setup(config)
     -- start observing buffer changes
     self.watchdog = Watchdog:new()
     if not self.watchdog then
         dlog("unable to initialize watchdog in class Nighthawk")
         return
     end
+
+    self.watchdog:setup(config["watchdog"])
 
     -- get connection to DB
     self.database = Database:new()
@@ -42,13 +41,13 @@ function Nighthawk:setup()
         return
     end
 
+    -- establish DB connection
+    self.database:setup(config["database"])
+
     -- register DB as listener for buffer changes
     self.watchdog:register_add_time(function (bufname, time)
         self.database:add(bufname, time)
     end)
-
-    -- establish DB connection
-    self.database:connect("/Users/ebablick/Nighthawk.sqlite")
 end
 
 --- Called when object is garbage collected
