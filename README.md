@@ -27,33 +27,81 @@ Time  spend on  buffers that  have no  file attached  (e.g. Neo-Tree,  Tagbar,
 Terminal, ...) will also be tracked  and automatically be added to the numbers
 of the last file worked on.
 
-The editing time is collected with second granularity and stored in a SQLite database.
+Filenames and accumulated  worktime will be stored in a  SQLite database which
+will  preserve  the data  even  if  no  NeoVim  instance is  active.  Multiple
+instances of NeoVim will all store the data in one database.
 
+Stored data of the  databse can be deleted with NeoVim commands  as soon as it
+is not required anymore.
 
 ## Installation
 
 The plugin is available through Github.
 
-        git clone https://github.com/ernst-bablick/nighthawk
+    https://github.com/ernst-bablick/nighthawk
 
 It depends on a SQLite/LuaJIT plugin that is also available as plugin for NeoVim
 
-        git clone https://github.com/kkharji/sqlite.lua
+    https://github.com/kkharji/sqlite.lua
 
-Either install the plugins manually, use your  favorite package manager, or  use Vim's
-built-in package support.
+Please note that certain plugins require additional installation steps. SQLite
+needs access to a library from the SQLite binary package that can be installed 
+on MacOS via
+
+    brew install sqlite
+
+For futher details please read the corresponding documentation of the plugin.
+
+Nighthawk logs into  logfile or into the NeoVims messages  buffer if following
+plugin is  available in NeoVim and  if logging is also  enabled. Otherwise the
+plugin is not required.
+
+    https://github.com/smartpde/debuglog
+
+Either install the plugins manually, use your favorite package manager, or use
+Vim's built-in package support.
+
+A configuration for the Lazy plugin manager of NeoVim would look like this:
+
+    {
+        'ernst-bablick/nighthawk',
+        dependencies = {
+            'smartpde/debuglog',
+            'kkharji/sqlite.lua',
+        },
+        config = function ()
+            require('nighthawk').setup({
+                watchdog = {
+                    -- Max seconds of inactivity before timer stops
+                    max_inactivity = 120,   
+
+                    -- Reporting interval in milliseconds
+                    report_interval = 5000, 
+                },
+                database = {
+                    db_file = "~/Nighthawk.sqlite",
+                },
+            })
+        end
+    }
+
+Please  note  the config-section  at  the  end  of the  plugin  configuration.
+In  order  that  Nighthawk can  work  properly  it  is  required to  call  the
+setup-function of  the plugin.  This function  accepts the  optional Nighthawk
+configuration  where certain  parameters  can be  specified  to overwrite  the
+plugins builtin defaults.
 
 ## Further Documentation
 
 Nighthawk's  documentation  is available  through  Vim's  help. Use  following
 command to access it:
 
-        :help nighthawk
+    :help nighthawk
 
 FAQ's  and information  about issues  or current  activities of  the Nighthawk
 project can be found in
 
-        https://github.com/ernst-bablick/nighthawk/wiki
+    https://github.com/ernst-bablick/nighthawk/wiki
 
 ## License
 
