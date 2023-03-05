@@ -1,9 +1,9 @@
 Nighthawk's  documentation  is available  through  Vim's  help. Use  following
 command to access it:
 
-        :help nighthawk
+    :help nighthawk
 
 FAQ's  and information  about issues  or current  activities of  the Nighthawk
 project can be found in
 
-        https://github.com/ernst-bablick/nighthawk/wiki
+    https://github.com/ernst-bablick/nighthawk/wiki
