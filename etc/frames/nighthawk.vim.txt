@@ -1,0 +1,34 @@
+*nighthawk.txt* Nighthawk
+*nighthawk*
+
+Author:   Ernst Bablick <ernst.bablick@web.de>
+Version:  {{VERSION}}
+Homepage: <https://github.com/ernst-bablick/nighthawk>
+License:  MIT license
+
+==============================================================================
+INTRODUCTION                                                       *nighthawk*
+
+{{INTRODUCTION}}
+
+==============================================================================
+FUNCTIONALITY                                        *nighthawk-functionality*
+
+{{FUNCTIONALITY}}
+
+==============================================================================
+INSTALLATION                                          *nighthawk-installation*
+
+{{INSTALLATION}}
+
+==============================================================================
+DOCUMENTATION                                        *nighthawk-documentation*
+
+{{DOCUMENTATION}}
+
+==============================================================================
+LICENSE                                                    *nighthawk-license*
+
+{{LICENSE}}
+
+

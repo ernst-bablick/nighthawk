@@ -1,0 +1,10 @@
+The plugin is available through Github.
+
+        git clone https://github.com/ernst-bablick/nighthawk
+
+It depends on a SQLite/LuaJIT plugin that is also available as plugin for NeoVim
+
+        git clone https://github.com/kkharji/sqlite.lua
+
+Either install the plugins manually, use your  favorite package manager, or  use Vim's
+built-in package support.

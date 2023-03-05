@@ -1,0 +1,10 @@
+NightHawk observes activities  of Vim buffers and  as long as the  user is not
+idle for a longer  period of time it will accumulate  and remember the editing
+time for files that belongs to corresponding buffers.
+
+Time  spend on  buffers that  have no  file attached  (e.g. Neo-Tree,  Tagbar,
+Terminal, ...) will also be tracked  and automatically be added to the numbers
+of the last file worked on.
+
+The editing time is collected with second granularity and stored in a SQLite database.
+
