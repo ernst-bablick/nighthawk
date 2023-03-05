@@ -7,6 +7,7 @@ doc:
 	./bin/replace_section.sh ./doc/nighthawk.txt INSTALLATION ./etc/sections/installation.txt
 	./bin/replace_section.sh ./doc/nighthawk.txt DOCUMENTATION ./etc/sections/documentation.txt
 	./bin/replace_section.sh ./doc/nighthawk.txt LICENSE ./etc/sections/license.txt
+	./bin/replace_keyword.sh ./doc/nighthawk.txt VERSION "0.1"
 	
 	cp ./etc/frames/readme.md.txt ./README.md
 	./bin/replace_section.sh ./README.md INTRODUCTION ./etc/sections/introduction.txt

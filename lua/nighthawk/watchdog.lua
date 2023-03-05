@@ -1,14 +1,8 @@
 local dlog = require("nighthawk.dlog")
+local util = require("nighthawk.util")
 
 -- some default values for this module
 local AUTOCMD_GRP    = "Nighthawk" -- name of the autocommand group
-
---- Check if a file or directory with the given name exists
----
---- @return boolean true when name is a file or directory
-local function is_file_or_dir(str)
-    return os.rename(str, str) and true or false
-end
 
 local Watchdog = {
     -- autogroup used to register all autocommands
@@ -181,7 +175,7 @@ function Watchdog:update(buf, has_changed)
 
     local bufname = vim.api.nvim_buf_get_name(buf)
     local start_timer = false
-    local is_real_file = is_file_or_dir(bufname)
+    local is_real_file = util.is_file_or_dir(bufname)
 
     -- was contend changed
     if has_changed == true and is_real_file then

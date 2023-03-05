@@ -1,36 +1,37 @@
 local sqlite = require("sqlite")
 local dlog = require("nighthawk.dlog")
+local util = require("nighthawk.util")
 
--- @todo Move into utility module
-local function sec2time(seconds)
-    local h = math.floor(seconds / 3600)
-    local m = math.floor((seconds - h * 3600) / 60)
-    local s = seconds % 60
+-- Default location of the SQLite DB. 
+local DB_PATH = "~/.local/share/nvim/nighthawk/"
+local DB_FILE = DB_PATH .. "Nighthawk.sqlite"
 
-    local res = ""
-    if h > 0 then
-        res = res .. h .. ':'
-    end
-    if m > 0 then
-        if h > 0 then
-            res = res .. string.format("%02d", m) .. ':'
-        else
-            res = res .. m .. ':'
-        end
-        res = res .. string.format("%02d", s)
-    else
-        res = res .. s
-    end
-    return res
-end
-
--- @fixme Move the default location into a nvim dot-directory
-local DB_FILE = "~/Nighthawk.sqlite"
-
+--- Databse class
 local Database = {
-    -- DB connection
+    -- Connection to the SQLite DB
     connection = nil,
 }
+
+--- Class method that checks accessability of DB
+--- @todo Works only on UNIX based OSes. Should be made platform independent
+function Database.check_access()
+    -- Create the base directory
+    local ret = os.execute("mkdir -p " .. DB_PATH)
+    if ret ~= 0 then
+        dlog("Creating base directory for database failed with error %d", ret)
+        return false
+    end
+
+    -- Check if the file at the default location can be opened
+    local con = sqlite.new(DB_FILE, {keep_open = true})
+    if not con then
+        dlog("unable to open DB")
+        return false
+    end
+    con:close()
+
+    return true
+end
 
 --- Constructor for a new Database instance
 function Database:new(o)
@@ -48,20 +49,48 @@ function Database:new(o)
 end
 
 --- Create the DB tables if they do not exist
-function Database:create_table()
-    if not self.connection:exists('buffers') then
+function Database:upgrade_db()
+    local version = "1"
+
+    -- create parameters table with version entry
+    if not self.connection:exists('parameters') then
         self.connection:create(
-            'buffers', {
-                path = {'text', 'primary', 'key'},
-                seconds = {type = 'integer', default = 0},
+            'parameters', {
+                name = {'text', 'primary', 'key'},
+                value = {'text'},
             }
         )
-        if not self.connection:exists('buffers') then
-            dlog("unable to create table buffers")
-        end
+        self.connection:insert("parameters", {
+            name = "version",
+            value = version
+        })
+    else
+        local records = self.connection:select("parameters", {where = {name = "version"}})
+        version = records[1]["value"]
     end
 
-    -- @fix a version table might help to upgrade the database if this should be required
+    -- upgrade to version 2
+    if version == "1" then
+        -- create buffers table
+        if not self.connection:exists('buffers') then
+            self.connection:create(
+                'buffers', {
+                    path = {'text', 'primary', 'key'},
+                    seconds = {type = 'integer', default = 0},
+                }
+            )
+        end
+        self.connection:update("parameters", {
+            where = {name = "version"},
+            set = {name = "version", value = "2"}
+        })
+    end
+
+    -- TODO Add next uprade steps here
+
+    if version ~= "2" then
+        dlog("Database has version %s but 2 was expected", version)
+    end
 end
 
 --- Connect to the DB
@@ -79,7 +108,7 @@ function Database:setup(config)
     end
 
     -- create table
-    self:create_table()
+    self:upgrade_db()
 end
 
 --- Release a Database instance.
@@ -142,7 +171,7 @@ function Database:get(path)
     -- if path is a file we will get exactly one row from the DB
     local record = self.connection:select("buffers", {where = {path = path}})
     if #record == 1 then
-        return sec2time(record[1]["seconds"])
+        return util.sec2time(record[1]["seconds"])
     end
 
     -- must be a directory. we need add up all records that start with path
@@ -155,7 +184,7 @@ function Database:get(path)
             end
         end
     end
-    return sec2time(sec)
+    return util.sec2time(sec)
 end
 
 -- @todo add a clear function that either removes a file entry or all entries from one directory from the DB

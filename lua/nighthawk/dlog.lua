@@ -1,21 +1,29 @@
+local default_config = require("nighthawk.config")
+
 --- Read more at https://github.com/smartpde/debuglog#shim
 local has_debuglog, debuglog = pcall(require, "debuglog")
 
--- @todo make the dlog module configureable via user configuration
-
-local DEBUG_LOGGER = "Nighthawk"
-local dlog = nil
-
 if has_debuglog then
-    debuglog.set_config({
-        log_to_file = true,
-        log_to_console = false,
-    })
-    debuglog.enable(DEBUG_LOGGER)
+    local dlog = nil
+    local log_config = default_config["log"]
+    local name = log_config["name"]
+    local to_file = log_config["to_file"]
+    local to_console = log_config["to_console"]
 
-    dlog = debuglog.logger_for_shim_only(DEBUG_LOGGER)
-    dlog("dlog %s initialized", DEBUG_LOGGER)
-    return dlog
+    debuglog.set_config({
+        log_to_file = to_file,
+        log_to_console = to_console
+    })
+    if to_file or to_console then
+        debuglog.enable(name)
+        dlog = debuglog.logger_for_shim_only(name)
+        if dlog then
+           dlog("dlog %s initialized", name)
+        end
+        return dlog
+    else
+        return function(...) end
+    end
 else
     return function(...) end
 end

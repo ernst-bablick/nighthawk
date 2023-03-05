@@ -2,31 +2,11 @@
 local Nighthawk = require("nighthawk.Nighthawk")
 local health = require("nighthawk.health")
 local dlog = require("nighthawk.dlog")
+local default_config = require("nighthawk.config")
 
 local module = {}
 local nighthawk = nil
 local commands_initialized = false
-
---- Default configuration
----
---- Overwrites builtin defaults. Can be overwritten by user configuration
---- specified in the plugin configuration when Nighthawk.setup() is called
---- @todo Move the configuration in a separate module
-local default_config = {
-
-    -- configuration of the Watchdog class
-    watchdog = {
-        -- Max seconds of inactivity before timer stops
-        max_inactivity = 120,
-
-        -- Reporting interval in milliseconds
-        report_interval = 1000,
-    },
-    -- configuration of the Database class
-    database = {
-        db_file = "~/Nighthawk.sqlite",
-    },
-}
 
 local function setup_commands()
     if commands_initialized == false then

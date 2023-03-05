@@ -27,11 +27,11 @@ Time  spend on  buffers that  have no  file attached  (e.g. Neo-Tree,  Tagbar,
 Terminal, ...) will also be tracked  and automatically be added to the numbers
 of the last file worked on.
 
-Filenames and accumulated  worktime will be stored in a  SQLite database which
+Filenames and accumulated work time will be stored in a  SQLite database which
 will  preserve  the data  even  if  no  NeoVim  instance is  active.  Multiple
 instances of NeoVim will all store the data in one database.
 
-Stored data of the  databse can be deleted with NeoVim commands  as soon as it
+Stored data of the database can be deleted with NeoVim commands  as soon as it
 is not required anymore.
 
 ## Installation
