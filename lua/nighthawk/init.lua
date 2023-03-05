@@ -11,6 +11,7 @@ local commands_initialized = false
 ---
 --- Overwrites builtin defaults. Can be overwritten by user configuration
 --- specified in the plugin configuration when Nighthawk.setup() is called
+--- @todo Move the configuration in a separate module
 local default_config = {
 
     -- configuration of the Watchdog class
@@ -44,6 +45,7 @@ function module.setup(config)
     nighthawk = Nighthawk:new()
     nighthawk:setup(module.config)
     setup_commands()
+    dlog("Nighthawk setup completed")
 end
 
 --- Cleaup function that terminates the plugin
@@ -51,6 +53,7 @@ function module.cleanup()
     nighthawk = nil
 end
 
+--- Returns editing time for path
 function module.get(path)
     return nighthawk:get(path)
 end

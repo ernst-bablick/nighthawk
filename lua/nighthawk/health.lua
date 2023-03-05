@@ -1,7 +1,6 @@
-local Nighthawk = require("nighthawk.Nighthawk")
-
 local health = {}
 
+-- @todo add check if SQLite db can be accessed otherwise shared libs are missing
 function health.check()
     local fns = vim.fn
     local report_ok = fns['health#report_ok']

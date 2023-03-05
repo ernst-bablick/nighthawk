@@ -2,6 +2,10 @@
 
 ## Summary
 
+[//]: # "@todo Move text sections than can be used for multiple parts of documentation"
+
+[//]: # "@todo Remove following sentence with the first release of Nighthawk" 
+
 WORK IN PROGRESS. FIRST VERSION IS STILL NOT FINALIZED.
 
 NightHawk is a NeoVim plugin that lets the editor track how much time is spend

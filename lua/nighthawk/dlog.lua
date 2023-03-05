@@ -1,6 +1,8 @@
 --- Read more at https://github.com/smartpde/debuglog#shim
 local has_debuglog, debuglog = pcall(require, "debuglog")
 
+-- @todo make the dlog module configureable via user configuration
+
 local DEBUG_LOGGER = "Nighthawk"
 local dlog = nil
 

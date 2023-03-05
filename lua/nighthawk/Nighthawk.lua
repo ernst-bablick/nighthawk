@@ -61,4 +61,6 @@ function Nighthawk:get(path)
     return self.database:get(path)
 end
 
+--- @todo Add one command in command-mode that allows to trigger Nighthawk functionality
+
 return Nighthawk

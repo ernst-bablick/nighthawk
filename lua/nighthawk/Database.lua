@@ -1,6 +1,7 @@
 local sqlite = require("sqlite")
 local dlog = require("nighthawk.dlog")
 
+-- @todo Move into utility module
 local function sec2time(seconds)
     local h = math.floor(seconds / 3600)
     local m = math.floor((seconds - h * 3600) / 60)
@@ -23,6 +24,7 @@ local function sec2time(seconds)
     return res
 end
 
+-- @fixme Move the default location into a nvim dot-directory
 local DB_FILE = "~/Nighthawk.sqlite"
 
 local Database = {
@@ -58,6 +60,8 @@ function Database:create_table()
             dlog("unable to create table buffers")
         end
     end
+
+    -- @fix a version table might help to upgrade the database if this should be required
 end
 
 --- Connect to the DB
@@ -92,6 +96,7 @@ end
 --- @param buffer_name string Name of a vim buffer.
 --- @param time number seconds that should be added.
 --- @todo decople function call from database access to improve performance in edit mode
+--- @todo Check if the SQLite plugin supports transactions
 function Database:add(buffer_name, time)
     -- find record for path if there is one
     local records = self.connection:select("buffers", {where = {path = buffer_name}})
@@ -152,5 +157,7 @@ function Database:get(path)
     end
     return sec2time(sec)
 end
+
+-- @todo add a clear function that either removes a file entry or all entries from one directory from the DB
 
 return Database
