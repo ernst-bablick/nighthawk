@@ -29,8 +29,31 @@ end
 --- Check if a file or directory with the given name exists
 ---
 --- @return boolean true when name is a file or directory
+---
 function util.is_file_or_dir(str)
-    return os.rename(str, str) and true or false
+    local stat = vim.loop.fs_stat(str)
+
+    if stat and (stat.type == "file" or stat.type == "directory") then
+        return true
+    else
+        return false
+    end
 end
+
+-- function util.is_file_or_dir(str)
+--     return os.rename(str, str) and true or false
+-- end
+
+function util.exists(str)
+    local stat = vim.loop.fs_stat(str)
+
+    if stat then
+        return true
+    else
+        return false
+    end
+end
+
+
 
 return util

@@ -3,8 +3,8 @@ local dlog = require("nighthawk.dlog")
 local util = require("nighthawk.util")
 
 -- Default location of the SQLite DB. 
-local DB_PATH = "~/.local/share/nvim/nighthawk/"
-local DB_FILE = DB_PATH .. "Nighthawk.sqlite"
+local DB_DIRECTORY = "~/.local/share/nvim/nighthawk/"
+local DB_FILE = "Nighthawk.sqlite"
 
 --- Databse class
 local Database = {
@@ -13,17 +13,21 @@ local Database = {
 }
 
 --- Class method that checks accessability of DB
---- @todo Works only on UNIX based OSes. Should be made platform independent
 function Database.check_access()
+    local db_directory = vim.fn.expand(DB_DIRECTORY)
+    local db_filepath = vim.fn.expand(DB_DIRECTORY .. DB_FILE)
+
     -- Create the base directory
-    local ret = os.execute("mkdir -p " .. DB_PATH)
-    if ret ~= 0 then
-        dlog("Creating base directory for database failed with error %d", ret)
-        return false
+    if not util.exists(db_directory) then
+        local ret = os.execute("mkdir -p " .. db_directory)
+        if ret ~= 0 then
+            dlog("Creating base directory for database failed with error %d", ret)
+            return false
+        end
     end
 
-    -- Check if the file at the default location can be opened
-    local con = sqlite.new(DB_FILE, {keep_open = true})
+    -- Check if the file at the default location can be opened/created
+    local con = sqlite.new(db_filepath, {keep_open = true})
     if not con then
         dlog("unable to open DB")
         return false
@@ -84,6 +88,7 @@ function Database:upgrade_db()
             where = {name = "version"},
             set = {name = "version", value = "2"}
         })
+        version = "2"
     end
 
     -- TODO Add next uprade steps here
@@ -95,12 +100,26 @@ end
 
 --- Connect to the DB
 function Database:setup(config)
+    local db_directory = config["db_directory"] or DB_DIRECTORY
     local db_file = config["df_file"] or DB_FILE
-    db_file = vim.fn.expand(db_file)
+    local db_filepath = db_directory .. db_file
+
+    -- expanding ~ and variables
+    db_directory = vim.fn.expand(db_directory)
+    db_filepath = vim.fn.expand(db_filepath)
+
+    -- create the base directory if it does not exist
+    if not util.exists(db_directory) then
+        local ret = os.execute("mkdir -p " .. db_directory)
+        if ret ~= 0 then
+            dlog("Creating base database directory %s failed with error %d", db_directory, ret)
+            return false
+        end
+    end
 
     -- establish DB connection
     if not self.connection then
-        self.connection = sqlite.new(db_file, {keep_open = true})
+        self.connection = sqlite.new(db_filepath, {keep_open = true})
         if not self.connection then
             dlog("unable to establish DB connection")
             return
@@ -124,7 +143,7 @@ end
 ---
 --- @param buffer_name string Name of a vim buffer.
 --- @param time number seconds that should be added.
---- @todo decople function call from database access to improve performance in edit mode
+--- @todo decouple function call from database access to improve performance in edit mode
 --- @todo Check if the SQLite plugin supports transactions
 function Database:add(buffer_name, time)
     -- find record for path if there is one

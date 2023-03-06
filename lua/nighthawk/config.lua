@@ -1,7 +1,8 @@
 --- Default configuration
 ---
---- Overwrites builtin defaults. Can be overwritten by user configuration
---- specified in the plugin configuration when Nighthawk.setup() is called
+--- Overwrites builtin defaults. All except logging parameters can before
+--- overwritten by user configuration specified in the plugin configuration 
+--- when Nighthawk.setup() is called.
 local default_config = {
     -- Settings for the logger. Parameters in this section cannot be overwritten by user.
     log = {
@@ -24,7 +25,11 @@ local default_config = {
     },
     -- configuration of the Database class
     database = {
-        db_file = "~/Nighthawk.sqlite",
+        -- path that has to end with a slash
+        db_directory = "~/.local/share/nvim/nighthawk/",
+
+        -- name of the DB file located in db_directory
+        db_file = "Nighthawk.sqlite",
     },
 }
 

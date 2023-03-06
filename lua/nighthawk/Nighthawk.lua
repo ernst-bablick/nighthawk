@@ -3,8 +3,10 @@ local Database = require("nighthawk.Database")
 local dlog = require("nighthawk.dlog")
 
 local Nighthawk = {
-    --- Watchdog that obswerves buffer switches or changes
+    --- Watchdog that observes buffer switches or changes
     watchdog = nil,
+
+    --- Database that stores collected information
     database = nil,
 }
 
@@ -31,6 +33,7 @@ function Nighthawk:setup(config)
         return
     end
 
+    -- setup the watchdog using specified configuration setting
     self.watchdog:setup(config["watchdog"])
 
     -- get connection to DB
@@ -41,7 +44,7 @@ function Nighthawk:setup(config)
         return
     end
 
-    -- establish DB connection
+    -- establish DB connection with user specified settings
     self.database:setup(config["database"])
 
     -- register DB as listener for buffer changes
