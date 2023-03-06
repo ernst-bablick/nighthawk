@@ -6,8 +6,8 @@
 
 WORK IN PROGRESS. FIRST VERSION IS STILL NOT FINALIZED.
 
-NightHawk is a NeoVim plugin that lets the editor track how much time is spend
-editing individual files.
+NightHawk is a plugin for NeoVim on UNIX based operating systems that lets 
+the editor track how much time is spend editing individual files.
 
 The plugin exposes Lua functions that accumulate that information for all
 files in a directory tree and provide the basis to track the time that was
