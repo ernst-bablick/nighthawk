@@ -20,7 +20,7 @@ doc:
 	./bin/replace_section.sh ./build/README.md INSTALLATION ./build/installation.txt
 	./bin/replace_section.sh ./build/README.md DOCUMENTATION ./etc/sections/documentation.txt
 	./bin/replace_section.sh ./build/README.md LICENSE ./etc/sections/license.txt
-	cp ./build/README.md ./README.txt
+	cp ./build/README.md ./README.md
 	
 	cp ./etc/frames/license.txt ./LICENSE
 	./bin/replace_section.sh ./LICENSE LICENSE ./etc/sections/license.txt

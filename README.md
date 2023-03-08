@@ -36,6 +36,70 @@ is not required anymore.
 
 ## Installation
 
+The plugin is available through Github.
+
+    https://github.com/ernst-bablick/nighthawk
+
+It depends on a SQLite/LuaJIT plugin that is also available as plugin for NeoVim
+
+    https://github.com/kkharji/sqlite.lua
+
+Please note that certain plugins require additional installation steps. SQLite
+needs access to a library from the SQLite binary package that can be installed 
+on MacOS via
+
+    brew install sqlite
+
+For futher details please read the corresponding documentation of the plugin.
+
+Nighthawk logs into  logfile or into the NeoVims messages  buffer if following
+plugin is  available in NeoVim and  if logging is also  enabled. Otherwise the
+plugin is not required.
+
+    https://github.com/smartpde/debuglog
+
+Either install the plugins manually, use your favorite package manager, or use
+Vim's built-in package support.
+
+A configuration for the Lazy plugin manager of NeoVim would look like this:
+
+    {
+        'ernst-bablick/nighthawk',
+        dependencies = {
+            'smartpde/debuglog',
+            'kkharji/sqlite.lua',
+        },
+        config = function ()
+            require('nighthawk').setup({
+                -- REPLACE THIS LINE BY CONFIGURATION SETTINGS
+            })
+        end
+    }
+
+Please  note  the config-section  at  the  end  of the  plugin  configuration.
+In  order  that  Nighthawk can  work  properly  it  is  required to  call  the
+setup-function of  the plugin.  This function  accepts the  optional Nighthawk
+configuration  where certain  parameters  can be  specified  to overwrite  the
+plugins builtin defaults. The next sections shows all supported configuration
+parameters, their default settings and allowed values.
+
+    -- configuration of the Database class
+    database = {
+        -- path that has to end with a slash
+        db_directory = "~/.local/share/nvim/nighthawk/",
+
+        -- name of the DB file located in db_directory
+        db_file = "Nighthawk.sqlite",
+    },
+    -- configuration of the Watchdog class
+    watchdog = {
+        -- Max seconds of inactivity before timer stops 
+        -- (number in seconds > report_interval+1)
+        max_inactivity = 120,
+
+        -- Reporting interval in milliseconds (numbers >= 1000)
+        report_interval = 1000,
+    },
 
 ## Further Documentation
 
