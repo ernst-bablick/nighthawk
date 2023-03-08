@@ -15,14 +15,7 @@ local default_config = {
         -- Log to console
         to_console = false,
     },
-    -- configuration of the Watchdog class
-    watchdog = {
-        -- Max seconds of inactivity before timer stops
-        max_inactivity = 120,
-
-        -- Reporting interval in milliseconds
-        report_interval = 1000,
-    },
+    -- OVERWRITEABLE CONFIGURATION - BEGIN
     -- configuration of the Database class
     database = {
         -- path that has to end with a slash
@@ -31,6 +24,16 @@ local default_config = {
         -- name of the DB file located in db_directory
         db_file = "Nighthawk.sqlite",
     },
+    -- configuration of the Watchdog class
+    watchdog = {
+        -- Max seconds of inactivity before timer stops 
+        -- (number in seconds > report_interval+1)
+        max_inactivity = 120,
+
+        -- Reporting interval in milliseconds (numbers >= 1000)
+        report_interval = 1000,
+    },
+    -- OVERWRITEABLE CONFIGURATION - END
 }
 
 return default_config

@@ -33,16 +33,7 @@ A configuration for the Lazy plugin manager of NeoVim would look like this:
         },
         config = function ()
             require('nighthawk').setup({
-                watchdog = {
-                    -- Max seconds of inactivity before timer stops
-                    max_inactivity = 120,   
-
-                    -- Reporting interval in milliseconds
-                    report_interval = 5000, 
-                },
-                database = {
-                    db_file = "~/Nighthawk.sqlite",
-                },
+                -- REPLACE THIS LINE BY CONFIGURATION SETTINGS
             })
         end
     }
@@ -51,4 +42,7 @@ Please  note  the config-section  at  the  end  of the  plugin  configuration.
 In  order  that  Nighthawk can  work  properly  it  is  required to  call  the
 setup-function of  the plugin.  This function  accepts the  optional Nighthawk
 configuration  where certain  parameters  can be  specified  to overwrite  the
-plugins builtin defaults.
+plugins builtin defaults. The next sections shows all supported configuration
+parameters, their default settings and allowed values.
+
+    {{CONFIGURATION}}

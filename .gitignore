@@ -40,5 +40,6 @@ luac.out
 *.hex
 
 # Other
+./build/*
 .DS_Store
 
