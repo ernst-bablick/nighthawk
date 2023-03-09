@@ -64,6 +64,11 @@ function Nighthawk:get(path)
     return self.database:get(path)
 end
 
+--- Clear times for path
+function Nighthawk:clear(path)
+    self.database:clear(path)
+end
+
 --- @todo Add one command in command-mode that allows to trigger Nighthawk functionality
 
 return Nighthawk

@@ -38,6 +38,11 @@ function module.get(path)
     return nighthawk:get(path)
 end
 
+--- Clears time for path
+function module.clear(path)
+    nighthawk:clear(path)
+end
+
 --- Healthcheck that can be triggered by checkhealth-command
 function module.check()
     health.check()

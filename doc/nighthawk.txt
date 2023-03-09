@@ -57,13 +57,13 @@ on MacOS via
 
 For futher details please read the corresponding documentation of the plugin.
 
-Nighthawk logs into  logfile or into the NeoVims messages  buffer if following
-plugin is  available in NeoVim and  if logging is also  enabled. Otherwise the
-plugin is not required.
+Nighthawk  logs  into a  logfile  or  into  the  NeoVim's messages  buffer  if
+following  plugin is  available  in NeoVim  and if  logging  is also  enabled.
+Otherwise the plugin is not required.
 
     https://github.com/smartpde/debuglog
 
-Either install the plugins manually, use your favorite package manager, or use
+Either install all plugins manually, use your favorite package manager, or use
 Vim's built-in package support.
 
 A configuration for the Lazy plugin manager of NeoVim would look like this:
@@ -85,7 +85,7 @@ Please  note  the config-section  at  the  end  of the  plugin  configuration.
 In  order  that  Nighthawk can  work  properly  it  is  required to  call  the
 setup-function of  the plugin.  This function  accepts the  optional Nighthawk
 configuration  where certain  parameters  can be  specified  to overwrite  the
-plugins builtin defaults. The next sections shows all supported configuration
+plugins builtin defaults. The next sections shows all  supported configuration
 parameters, their default settings and allowed values.
 
     -- configuration of the Database class

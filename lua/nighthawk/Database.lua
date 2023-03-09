@@ -99,6 +99,9 @@ function Database:upgrade_db()
 end
 
 --- Connect to the DB
+---
+---@param config any Configuration that will (partially) overwrite internal values
+---@return boolean False in case of errors
 function Database:setup(config)
     local db_directory = config["db_directory"] or DB_DIRECTORY
     local db_file = config["df_file"] or DB_FILE
@@ -177,13 +180,41 @@ function Database:add(buffer_name, time)
     end
 end
 
+--- Clear time for path
+---
+--- @param path string Absolute file or directory path
+function Database:clear(path)
+    -- early exit
+    if not path then
+        return
+    end
+
+    -- if path is a file then we only need to delete one record
+    dlog("received deletion for path %s", path)
+    local record = self.connection:select("buffers", {where = {path = path}})
+    if #record == 1 then
+        self.connection:delete("buffers", {where = {path = path}})
+        return
+    end
+
+    -- must be a directory. we will delete all records that start with path
+    local records = self.connection:select("buffers")
+    if #records > 0 then
+        for _, row in pairs(records) do
+            if string.sub(row["path"], 1, #path) == path then
+                self.connection:delete("buffers", {where = {path = row["path"]}})
+            end
+        end
+    end
+end
+
 --- Returns the accrued handling time as hour/minute/second string
 ---
 --- @param path string Absolute file or directory path
 --- @return string time in the format of [[HH:]MM:]SS
 function Database:get(path)
     -- early exit
-    if path == nil then
+    if not path then
         return "0"
     end
 
@@ -205,7 +236,5 @@ function Database:get(path)
     end
     return util.sec2time(sec)
 end
-
--- @todo add a clear function that either removes a file entry or all entries from one directory from the DB
 
 return Database

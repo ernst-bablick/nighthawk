@@ -26,7 +26,7 @@ local default_config = {
     },
     -- configuration of the Watchdog class
     watchdog = {
-        -- Max seconds of inactivity before timer stops 
+        -- Max seconds of inactivity before buffer observation stops 
         -- (number in seconds > report_interval+1)
         max_inactivity = 120,
 
